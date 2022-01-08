@@ -1,19 +1,14 @@
-from PIL import Image
-import os
-import math
 import logging
 from collections import Counter
 from typing import List
 
 import numpy as np
 from scipy.spatial import distance_matrix
-import matplotlib.pyplot as plt
-from tqdm import tqdm
 import cv2
 
-from custom_types import *
+from common import Point, Points
 
-LOGGER = logging.getLogger('global_logger')
+LOGGER = logging.getLogger('my_logger')
 
 
 def harris_corner(image: np.ndarray) -> Points:
@@ -132,19 +127,22 @@ class SquareResponseFilter:
         return np.array(kept)
 
 
+if __name__ == '__main__':
+    import sys
+    LOGGER.setLevel(logging.DEBUG)
+    LOGGER.addHandler(logging.StreamHandler(stream=sys.stdout))
+    import utils
+    image = utils.read_images('chessboard_patterns/calibration-23.png')[0]
 
+    corners = harris_corner(image)
+    utils.visualize_keypoints(image, corners)
 
+    corners = clustering_filter(corners)
+    utils.visualize_keypoints(image, corners)
 
+    corners = connected_component_filter(corners)
+    utils.visualize_keypoints(image, corners)
 
-
-
-
-
-
-
-
-
-
-
-
-
+    square_response_filter = SquareResponseFilter()
+    corners = square_response_filter.filter(image, corners)
+    utils.visualize_keypoints(image, corners)

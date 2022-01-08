@@ -1,7 +1,7 @@
-import os
 import glob
 from copy import deepcopy
 
+import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 plt.rcParams['figure.dpi'] = 200
@@ -25,8 +25,29 @@ def show(image):
     plt.show()
 
 
-def visualize_keypoints(image, points, radius=5):
+def visualize_keypoints(image, points, radius=5, no_show=False):
     image = deepcopy(image)
     for point in points:
         cv2.circle(image, (point[1], point[0]), radius, (0, 0, 255), -1)
+    if no_show:
+        return image
+    show(image)
+
+
+def visualize_hull(image, quad_vertices, corners=()):
+    """Assume the points are arranged in order and that the first and last are connected."""
+    image = deepcopy(image)
+    points = quad_vertices[:, [1, 0]]
+    points = points.reshape((-1, 1, 2))
+    cv2.polylines(image, [points], True, (255, 0, 0), 3)
+    if len(corners) != 0:
+        image = visualize_keypoints(image, corners, no_show=True)
+    show(image)
+
+
+def visualize_chessboard(image, size, chessboard):
+    image = deepcopy(image)
+    chessboard = chessboard.reshape(size[0] * size[1], -1).astype(np.float32)
+    chessboard = chessboard[:, [1, 0]]
+    image = cv2.drawChessboardCorners(image, size, chessboard, True)
     show(image)
