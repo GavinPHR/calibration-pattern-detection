@@ -52,8 +52,9 @@ if __name__ == '__main__':
     images, paths = utils.read_images('circles_grid_patterns/calibration-*.jpg')
     results = []
     success_cnt = 0
+    visualize = True if len(sys.argv) == 2 and sys.argv[1] == 'visualize' else False
     for i, image in enumerate(images):
-        retval, corners = find_circles_grid(image, (7, 9))
+        retval, corners = find_circles_grid(image, (7, 9), visualize)
         if retval:
             results.append(corners)
             success_cnt += 1
