@@ -14,7 +14,7 @@ def approx_quadrilateral_hull(corners: Points) -> Points:
     hull = ConvexHull(corners)
     vertex_idx = hull.vertices  # counter-clockwise
     polygon = None
-    for epsilon in range(1, 8):
+    for epsilon in range(1, 10):
         polygon = cv2.approxPolyDP(corners[vertex_idx], epsilon=epsilon, closed=True)
         if len(polygon) == 4:  # Achieved quadrilateral
             break
@@ -185,7 +185,6 @@ class ChessboardFiller:
         if not self._check_all_filled():
             self._clear_chessboard_center()
         else:
-            LOGGER.info('Chessboard successfully filled!')
             return True
 
         # If horizontal failed, try filling each vertical lines form left to right instead
@@ -200,20 +199,11 @@ class ChessboardFiller:
         except AssertionError as e:
             LOGGER.debug(e)
             return False
-        LOGGER.info('Chessboard successfully filled!')
         return True
 
-    def get(self):
-        return self.chessboard
-
-
-
-
-
-
-
-
-
-
-
-
+    def get(self, flat=True):
+        """Returns the chessboard as a (h*w, 2) array if flat=True, otherwise a (h, w, 2) array."""
+        if flat:
+            h, w, _ = self.chessboard.shape
+            return self.chessboard.reshape(h * w, -1).astype(np.float32)
+        return self.chessboard.astype(np.float32)

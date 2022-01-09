@@ -1,12 +1,14 @@
 import logging
+import sys
 from collections import Counter
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 from scipy.spatial import distance_matrix
 import cv2
 
-from common import Point, Points
+from common import Point, Points, approx_quadrilateral_hull, ChessboardFiller
+import utils
 
 LOGGER = logging.getLogger('my_logger')
 
@@ -20,7 +22,7 @@ def harris_corner(image: np.ndarray) -> Points:
     response = response > 0.01 * response.max()
     # Extract points
     points = list(zip(*np.where(response == True)))
-    LOGGER.info(f'Harris corner detector found {len(points)} corners')
+    LOGGER.debug(f'Harris corner detector found {len(points)} corners')
     return np.array(points)
 
 
@@ -36,7 +38,7 @@ def clustering_filter(corners: Points) -> Points:
                     break
         if not close:
             kept.add(i)
-    LOGGER.info(f'Clustering filter: {len(corners)}->{len(kept)} corners')
+    LOGGER.debug(f'Clustering filter: {len(corners)}->{len(kept)} corners')
     return corners[list(kept)]
 
 
@@ -44,7 +46,7 @@ def connected_component_filter(corners: Points) -> Points:
     graph = distance_matrix(corners, corners) < 30
     # Only keep the components with <2 nodes
     kept = corners[np.sum(graph, axis=0) <= 2]  # <=2 because each node is connected to itself
-    LOGGER.info(f'Connected component filter: {len(corners)}->{len(kept)} corners')
+    LOGGER.debug(f'Connected component filter: {len(corners)}->{len(kept)} corners')
     return kept
 
 
@@ -123,26 +125,73 @@ class SquareResponseFilter:
                 continue
             if self._count_segments(response) >= 4:
                 kept.append(corner)
-        LOGGER.info(f'Square response filter: {len(corners)}->{len(kept)} corners')
+        LOGGER.debug(f'Square response filter: {len(corners)}->{len(kept)} corners')
         return np.array(kept)
 
 
-if __name__ == '__main__':
-    import sys
-    LOGGER.setLevel(logging.DEBUG)
-    LOGGER.addHandler(logging.StreamHandler(stream=sys.stdout))
-    import utils
-    image = utils.read_images('chessboard_patterns/calibration-23.png')[0]
+def sum_distance_filter(corners: Points, target) -> Points:
+    to_remove = len(corners) - target
+    if to_remove == 0:
+        return corners
+    sum_dist = np.sum(distance_matrix(corners, corners), axis=0)
+    kept = corners[np.argsort(sum_dist)[:-to_remove]]
+    LOGGER.debug(f'Sum distance filter: {len(corners)}->{len(kept)} corners')
+    return kept
 
+
+def find_chessboard_corners(image: np.ndarray,
+                            pattern_size: Tuple[int, int],  # (height, width)
+                            visualize=False) -> Tuple[bool, np.ndarray]:
+    target = pattern_size[0] * pattern_size[1]
     corners = harris_corner(image)
-    utils.visualize_keypoints(image, corners)
+    if visualize: utils.visualize_keypoints(image, corners)
+    if len(corners) < target: return False, np.array([])
 
     corners = clustering_filter(corners)
-    utils.visualize_keypoints(image, corners)
+    if visualize: utils.visualize_keypoints(image, corners)
+    if len(corners) < target: return False, np.array([])
 
     corners = connected_component_filter(corners)
-    utils.visualize_keypoints(image, corners)
+    if visualize: utils.visualize_keypoints(image, corners)
+    if len(corners) < target: return False, np.array([])
 
     square_response_filter = SquareResponseFilter()
     corners = square_response_filter.filter(image, corners)
-    utils.visualize_keypoints(image, corners)
+    if visualize: utils.visualize_keypoints(image, corners)
+    if len(corners) < target: return False, np.array([])
+
+    corners = sum_distance_filter(corners, target)
+    if visualize: utils.visualize_keypoints(image, corners)
+
+    if len(corners) != pattern_size[0] * pattern_size[1]:
+        return False, np.ndarray([])
+
+    quad = approx_quadrilateral_hull(corners)
+    if len(quad) == 0: return False, np.array([])
+    if visualize: utils.visualize_hull(image, quad, corners)
+
+    chessboard_filler = ChessboardFiller(pattern_size, corners, quad)
+    if not chessboard_filler.fill():
+        return False, np.array([])
+    corners = chessboard_filler.get()
+    if visualize: utils.visualize_chessboard(image, pattern_size, corners)
+
+    return True, corners
+
+
+if __name__ == '__main__':
+    LOGGER.setLevel(logging.INFO)
+    LOGGER.addHandler(logging.StreamHandler(stream=sys.stdout))
+    images, paths = utils.read_images('chessboard_patterns/calibration-*.png')
+    results = []
+    success_cnt = 0
+    for i, image in enumerate(images):
+        retval, corners = find_chessboard_corners(image, (7, 9))
+        if retval:
+            results.append(corners)
+            success_cnt += 1
+            LOGGER.info(f'find_chessboard_corners succeeded for {paths[i]}')
+        else:
+            LOGGER.info(f'find_chessboard_corners failed for {paths[i]}')
+            # find_chessboard_corners(image, (7, 9), visualize=True)
+    LOGGER.info(f'find_chessboard_corners succeeded for {success_cnt}/{len(images)} images')

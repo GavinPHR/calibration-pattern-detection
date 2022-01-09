@@ -9,9 +9,11 @@ plt.rcParams['figure.dpi'] = 200
 
 def read_images(dirname, grayscale=False):
     images = []
+    paths = []
     for fpath in glob.glob(dirname):
         images.append(cv2.imread(fpath, cv2.IMREAD_GRAYSCALE if grayscale else cv2.IMREAD_COLOR))
-    return images
+        paths.append(fpath)
+    return images, paths
 
 
 def show(image):
@@ -45,9 +47,8 @@ def visualize_hull(image, quad_vertices, corners=()):
     show(image)
 
 
-def visualize_chessboard(image, size, chessboard):
+def visualize_chessboard(image, size, corners):
     image = deepcopy(image)
-    chessboard = chessboard.reshape(size[0] * size[1], -1).astype(np.float32)
-    chessboard = chessboard[:, [1, 0]]
-    image = cv2.drawChessboardCorners(image, size, chessboard, True)
+    corners = corners[:, [1, 0]]
+    image = cv2.drawChessboardCorners(image, size, corners, True)
     show(image)
