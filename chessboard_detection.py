@@ -129,7 +129,7 @@ class SquareResponseFilter:
         return np.array(kept)
 
 
-def sum_distance_filter(corners: Points, target) -> Points:
+def sum_distance_filter(corners: Points, target: int) -> Points:
     to_remove = len(corners) - target
     if to_remove == 0:
         return corners
