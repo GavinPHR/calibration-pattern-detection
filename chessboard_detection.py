@@ -51,7 +51,7 @@ def connected_component_filter(corners: Points) -> Points:
 
 
 class SquareResponseFilter:
-    def __init__(self, size=10, half_smoothing_window_size=4):
+    def __init__(self, size=7, half_smoothing_window_size=4):
         self.size = size
         self.half_smoothing_window_size = half_smoothing_window_size
 
@@ -79,8 +79,8 @@ class SquareResponseFilter:
         # top-left, bottom-right
         tl, br = point - k, point + k
         # top-right, bottom-left
-        tr = np.array([point[0] - 10, point[1] + 10])
-        bl = np.array([point[0] + 10, point[1] - 10])
+        tr = np.array([point[0] - k, point[1] + k])
+        bl = np.array([point[0] + k, point[1] - k])
 
         response = []
         for j in range(tl[1], tr[1]):
@@ -123,7 +123,7 @@ class SquareResponseFilter:
                 response = self._get_square_response(binarized, corner)
             except IndexError:  # If a point to too close to the border
                 continue
-            if self._count_segments(response) >= 4:
+            if self._count_segments(response) in [4, 5]:
                 kept.append(corner)
         LOGGER.debug(f'Square response filter: {len(corners)}->{len(kept)} corners')
         return np.array(kept)

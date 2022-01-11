@@ -201,9 +201,10 @@ class ChessboardFiller:
             return False
         return True
 
-    def get(self, flat=True):
+    def get(self, xy=True):
         """Returns the chessboard as a (h*w, 2) array if flat=True, otherwise a (h, w, 2) array."""
-        if flat:
-            h, w, _ = self.chessboard.shape
-            return self.chessboard.reshape(h * w, -1).astype(np.float32)
-        return self.chessboard.astype(np.float32)
+        h, w, _ = self.chessboard.shape
+        corners = self.chessboard.reshape(h * w, -1).astype(np.float32)
+        if xy:
+            corners = corners[:, [1, 0]]
+        return corners

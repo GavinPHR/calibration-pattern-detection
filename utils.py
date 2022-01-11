@@ -49,6 +49,5 @@ def visualize_hull(image, quad_vertices, corners=()):
 
 def visualize_chessboard(image, size, corners):
     image = deepcopy(image)
-    corners = corners[:, [1, 0]]
     image = cv2.drawChessboardCorners(image, size, corners, True)
     show(image)
