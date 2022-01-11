@@ -187,12 +187,12 @@ if __name__ == '__main__':
     success_cnt = 0
     visualize = True if len(sys.argv) == 2 and sys.argv[1] == 'visualize' else False
     for i, image in enumerate(images):
-        retval, corners = find_chessboard_corners(image, (7, 9), visualize)
+        retval, corners = find_chessboard_corners(image, (9, 7), visualize)
         if retval:
             results.append(corners)
             success_cnt += 1
             LOGGER.info(f'find_chessboard_corners succeeded for {paths[i]}')
         else:
             LOGGER.info(f'find_chessboard_corners failed for {paths[i]}')
-            # find_chessboard_corners(image, (7, 9), visualize=True)
+            # find_chessboard_corners(image, (9, 7), visualize=True)
     LOGGER.info(f'find_chessboard_corners succeeded for {success_cnt}/{len(images)} images')

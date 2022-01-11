@@ -45,7 +45,7 @@ class ChessboardFiller:
         the quadrilateral points are the top-left, bottom-left, bottom-right, top-right corners IN ORDER.
         """
         # Initialize a chessboard to have all coordinates being (-1, -1)
-        self.chessboard = np.zeros((size[0], size[1], 2), dtype=np.int32) - 1
+        self.chessboard = np.zeros((size[1], size[0], 2), dtype=np.int32) - 1
         self.corners = corners
         self.quad = quadrilateral
 
@@ -202,9 +202,9 @@ class ChessboardFiller:
         return True
 
     def get(self, xy=True):
-        """Returns the chessboard as a (h*w, 2) array if flat=True, otherwise a (h, w, 2) array."""
+        """Returns the chessboard as a (h*w, 1, 2) array."""
         h, w, _ = self.chessboard.shape
-        corners = self.chessboard.reshape(h * w, -1).astype(np.float32)
+        corners = self.chessboard.reshape(h * w, 1, 2).astype(np.float32)
         if xy:
-            corners = corners[:, [1, 0]]
+            corners = corners[:, :, [1, 0]]
         return corners
