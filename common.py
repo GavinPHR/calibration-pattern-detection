@@ -207,4 +207,4 @@ class ChessboardFiller:
         corners = self.chessboard.reshape(h * w, 1, 2).astype(np.float32)
         if xy:
             corners = corners[:, :, [1, 0]]
-        return corners
+        return np.ascontiguousarray(corners)
