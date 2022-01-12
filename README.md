@@ -1,4 +1,4 @@
-# Calibration Pattern Detection
+# Calibration Pattern Detection ![](https://img.shields.io/badge/python-%3E=3.8-blue.svg)
 #### Cambridge MLMI12 Computer Vision Coursework 
 
 This repository contains code for custom calibration pattern detection algorithms. The 4 relevant Python files are:
