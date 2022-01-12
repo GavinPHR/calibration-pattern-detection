@@ -1,5 +1,5 @@
 # Calibration Pattern Detection
-#### Cambridge MLMI2 Computer Vision Coursework 
+#### Cambridge MLMI12 Computer Vision Coursework 
 
 This repository contains code for custom calibration pattern detection algorithms. The 4 relevant Python files are:
 
